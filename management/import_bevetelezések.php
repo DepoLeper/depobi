@@ -3,7 +3,6 @@
 set_time_limit(300);
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-date_default_timezone_set('Europe/Budapest');
 
 echo "<h1>Bevételezések Adatimportáló Szkript</h1><p>Indítva: " . date("Y-m-d H:i:s") . "</p><hr>";
 $feed_url = 'https://app.clouderp.hu/api/1/automatism/file-share/?s=Z0FBQUFBQm9ScXEwMU16aXVvTWxSSTJ2Qnc1SElXZTB1WGlEbG9uOHhjZVM5a00teks3ZHZ0b25aSDJFUjYwbXF4ODJIZUhYVWFObVE5Zi1ZMVkwcG5wNlI4STR1b2JvWnNCaS1wVUtaTVh3ZVdna2E5cG1tOW89';

@@ -1,12 +1,10 @@
 <?php
-// date_default_timezone_set('Europe/Budapest');
 session_start();
-// Adatbázis kapcsolódási adatok
-// KÉRLEK, ELLENŐRIZD, HOGY A MEGFELELŐ (ÉS MOST MÁR MŰKÖDŐ) ADATOKAT HASZNÁLOD!
-$db_host = 'localhost'; 
-$db_name = 'tdepo_vezetoi_dash'; // PONTOS adatbázisnév cPanelből!
-$db_user = 'tdepo_dash_admin';   // PONTOS adatbázis felhasználónév cPanelből!
-$db_pass = 'Hammer11!'; // <-- IDE ÍRD BE A HELYES, MŰKÖDŐ JELSZÓT!
+
+$db_host = 'localhost';
+$db_name = 'tdepo_vezetoi_dash';
+$db_user = 'tdepo_dash_admin';
+$db_pass = 'Hammer11!';
 
 $conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
 

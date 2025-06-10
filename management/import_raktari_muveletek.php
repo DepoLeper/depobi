@@ -4,7 +4,6 @@
 set_time_limit(600); // Megnövelve 10 percre a biztonság kedvéért
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-date_default_timezone_set('Europe/Budapest');
 
 echo "<h1>Összesített Raktári Műveletek Importáló Szkript</h1>";
 echo "<p>Szkript indításának időpontja: " . date("Y-m-d H:i:s") . "</p><hr>";

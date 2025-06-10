@@ -5,7 +5,6 @@
 set_time_limit(300);
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-date_default_timezone_set('Europe/Budapest');
 
 echo "<h1>Csomagolásra Váró Rendelések Importáló Szkript</h1>";
 echo "<p>Szkript indításának időpontja: " . date("Y-m-d H:i:s") . "</p><hr>";

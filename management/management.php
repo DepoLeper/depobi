@@ -1,5 +1,4 @@
 <?php
-// date_default_timezone_set('Europe/Budapest');
 session_start();
 if (!isset($_SESSION['loggedin_user_id']) || empty($_SESSION['loggedin_username'])) { header("location: login.php"); exit; }
 $page = $_GET['page'] ?? 'fooldal'; 

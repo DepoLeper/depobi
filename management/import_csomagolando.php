@@ -1,10 +1,11 @@
 <?php
-// import_csomagolando.php (Javított és végleges)
+// import_csomagolando.php
+// Feladat: A csomagolásra váró rendelések listájának frissítése a `csomagolando_rendelesek` táblában.
 
 set_time_limit(300);
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-// date_default_timezone_set('Europe/Budapest');
+date_default_timezone_set('Europe/Budapest');
 
 echo "<h1>Csomagolásra Váró Rendelések Importáló Szkript</h1>";
 echo "<p>Szkript indításának időpontja: " . date("Y-m-d H:i:s") . "</p><hr>";
@@ -22,14 +23,13 @@ if (!$conn) { die("ADATBÁZIS KAPCSOLÓDÁSI HIBA: " . mysqli_connect_error()); 
 mysqli_set_charset($conn, "utf8mb4");
 echo "<p>Sikeres adatbázis-kapcsolat.</p>";
 
-// --- CSV Letöltése cURL-lel ---
+// --- CSV Letöltése ---
 echo "<p>CSV letöltése a forrásból...</p>";
 $ch = curl_init();
 curl_setopt_array($ch, [ CURLOPT_URL => $feed_url, CURLOPT_RETURNTRANSFER => 1, CURLOPT_FOLLOWLOCATION => 1, CURLOPT_FAILONERROR => true, CURLOPT_TIMEOUT => 120, ]);
 $csv_data = curl_exec($ch);
 if (curl_errno($ch)) { $curl_error = curl_error($ch); curl_close($ch); die("HIBA: A cURL nem tudta letölteni a CSV fájlt. Hibaüzenet: " . $curl_error); }
 curl_close($ch);
-if ($csv_data === false) { die("HIBA: Nem sikerült letölteni a CSV fájlt."); }
 echo "<p>CSV sikeresen letöltve.</p>";
 
 // --- Adatfeldolgozás és Feltöltés ---
@@ -44,14 +44,17 @@ $sql_insert = "INSERT INTO `csomagolando_rendelesek` (`rendeles_azonosito`, `ugy
 
 mysqli_begin_transaction($conn);
 try {
+    // 1. Tábla kiürítése
     if (!mysqli_query($conn, $sql_truncate)) {
-        throw new Exception("Hiba a tábla kiürítésekor: " . mysqli_error($conn));
+        throw new Exception("Hiba a `csomagolando_rendelesek` tábla kiürítésekor: " . mysqli_error($conn));
     }
-    echo "<p>A `csomagolando_rendelesek` tábla sikeresen kiürítve.</p>";
+    echo "<p>A tábla sikeresen kiürítve.</p>";
     
+    // 2. Új adatok beillesztése
     $stmt = mysqli_prepare($conn, $sql_insert);
     if ($stmt === false) { throw new Exception("HIBA az SQL INSERT parancs előkészítésekor: " . mysqli_error($conn)); }
     
+    // A már bevált, robusztus dátumkezelő
     $date_formats = ['Y-m-d\TH:i:s.uP', 'Y.m.d. H:i:s', 'Y. m. d. H:i:s', 'Y.m.d. H:i', 'Y. m. d. H:i', 'Y-m-d H:i:s'];
 
     for ($i = 1; $i < count($lines); $i++) {
@@ -60,14 +63,18 @@ try {
         $values = str_getcsv($line);
         if (count($values) < 10 || empty($values[1])) { $skipped_rows++; continue; }
 
-        $letrehozas_str = trim($values[5] ?? '');
+        $letrehozas_str = trim($values[5] ?? ''); // F oszlop
         $letrehozas_dt = false;
         foreach ($date_formats as $format) {
             if ($letrehozas_dt === false) $letrehozas_dt = DateTime::createFromFormat($format, $letrehozas_str);
         }
-        if ($letrehozas_dt === false) { $skipped_rows++; continue; }
+        if ($letrehozas_dt === false) {
+            // Próbálkozás a new DateTime-mal, mint végső lehetőség ISO 8601 formátumra
+            try { $letrehozas_dt = new DateTime($letrehozas_str); } catch (Exception $e) { $skipped_rows++; continue; }
+            if ($letrehozas_dt === false) { $skipped_rows++; continue; }
+        }
 
-        // JAVÍTÁS: Minden értéket külön változóba teszünk a bind_param előtt
+        // Változók létrehozása a biztonságos `bind_param`-hoz
         $rendeles_azonosito = $values[1];
         $ugyfel_neve = $values[0];
         $rendeles_allapota = $values[2];
@@ -80,16 +87,8 @@ try {
         $penznem = $values[9];
 
         mysqli_stmt_bind_param($stmt, "ssssssssis", 
-            $rendeles_azonosito, 
-            $ugyfel_neve, 
-            $rendeles_allapota, 
-            $cimkek, 
-            $fizetesi_allapot, 
-            $letrehozas_db_format, 
-            $szallitasi_mod, 
-            $fizetesi_mod, 
-            $netto_ertek, 
-            $penznem
+            $rendeles_azonosito, $ugyfel_neve, $rendeles_allapota, $cimkek, $fizetesi_allapot, 
+            $letrehozas_db_format, $szallitasi_mod, $fizetesi_mod, $netto_ertek, $penznem
         );
         mysqli_stmt_execute($stmt);
         if(mysqli_stmt_affected_rows($stmt) > 0) { $inserted_rows++; }
